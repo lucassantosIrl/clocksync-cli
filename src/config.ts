@@ -3,6 +3,8 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 export interface ClockifyProjectConfig {
+  workspaceId?: string;
+  userId?: string;
   defaultProjectId?: string;
   defaultProjectName?: string;
   idleProjectId?: string;
@@ -57,6 +59,8 @@ function parseConfig(rawValue: string): AppConfig {
 
   const result: ClockifyProjectConfig = {};
   const optionalFields: Array<keyof ClockifyProjectConfig> = [
+    "workspaceId",
+    "userId",
     "defaultProjectId",
     "defaultProjectName",
     "idleProjectId",
@@ -146,4 +150,28 @@ export function setIdleProject(id: string, name: string): void {
 
 export function getConfigPath(): string {
   return CONFIG_PATH;
+}
+
+export function getClockifyIdentity(): { workspaceId?: string; userId?: string } {
+  const config = getConfig();
+  return {
+    workspaceId: config.clockify.workspaceId,
+    userId: config.clockify.userId,
+  };
+}
+
+export function setClockifyIdentity(workspaceId: string, userId: string): void {
+  const config = getConfig();
+
+  if (!workspaceId.trim()) {
+    throw new Error("ID do workspace Clockify nao pode ser vazio.");
+  }
+
+  if (!userId.trim()) {
+    throw new Error("ID do usuario Clockify nao pode ser vazio.");
+  }
+
+  config.clockify.workspaceId = workspaceId.trim();
+  config.clockify.userId = userId.trim();
+  saveConfig(config);
 }

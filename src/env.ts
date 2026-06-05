@@ -7,8 +7,6 @@ export interface EnvConfig {
   jiraEmail: string;
   jiraApiToken: string;
   clockifyApiKey: string;
-  clockifyWorkspaceId: string;
-  clockifyUserId: string;
 }
 
 const REQUIRED_ENV_VARS = [
@@ -18,8 +16,6 @@ const REQUIRED_ENV_VARS = [
   "JIRA_EMAIL",
   "JIRA_API_TOKEN",
   "CLOCKIFY_API_KEY",
-  "CLOCKIFY_WORKSPACE_ID",
-  "CLOCKIFY_USER_ID",
 ] as const;
 
 type RequiredEnvVar = (typeof REQUIRED_ENV_VARS)[number];
@@ -56,8 +52,6 @@ export function loadEnvConfig(): EnvConfig {
     jiraEmail: readRequiredVar("JIRA_EMAIL"),
     jiraApiToken: readRequiredVar("JIRA_API_TOKEN"),
     clockifyApiKey: readRequiredVar("CLOCKIFY_API_KEY"),
-    clockifyWorkspaceId: readRequiredVar("CLOCKIFY_WORKSPACE_ID"),
-    clockifyUserId: readRequiredVar("CLOCKIFY_USER_ID"),
   };
 }
 

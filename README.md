@@ -16,7 +16,7 @@ npm run build
 
 ### Instalar globalmente no sistema
 
-Para invocar `clocksync` diretamente de qualquer terminal do macOS:
+Para invocar `clocksync` diretamente de qualquer terminal:
 
 ```bash
 npm run build
@@ -58,11 +58,11 @@ JIRA_DOMAIN=
 JIRA_EMAIL=
 JIRA_API_TOKEN=
 CLOCKIFY_API_KEY=
-CLOCKIFY_WORKSPACE_ID=
-CLOCKIFY_USER_ID=
 ```
 
 Se faltar qualquer variavel obrigatoria, o CLI encerra com erro explicando quais campos faltam.
+
+Na primeira chamada a API do Clockify, o CLI obtem automaticamente `workspaceId` e `userId` via `GET /api/v1/user` e persiste em `~/.clocksync.json`. Nao e necessario configura-los manualmente.
 
 ### 2) Configuracao local (`~/.clocksync.json`)
 
@@ -71,6 +71,8 @@ O comando `set` grava os projetos selecionados em `~/.clocksync.json`:
 ```json
 {
   "clockify": {
+    "workspaceId": "id-do-workspace",
+    "userId": "id-do-usuario",
     "defaultProjectId": "id-do-projeto",
     "defaultProjectName": "Nome do projeto",
     "idleProjectId": "id-opcional",
@@ -78,6 +80,8 @@ O comando `set` grava os projetos selecionados em `~/.clocksync.json`:
   }
 }
 ```
+
+`workspaceId` e `userId` sao preenchidos automaticamente na primeira execucao de um comando que usa a API do Clockify. Os campos de projeto sao definidos via `clocksync set`.
 
 `defaultProjectId` e necessario para executar `sync`.
 

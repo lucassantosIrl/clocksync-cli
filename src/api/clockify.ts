@@ -1,3 +1,4 @@
+import { getClockifyIdentity, setClockifyIdentity } from "../config";
 import { env } from "../env";
 import { createClockifyHttpClient } from "../utils/http";
 
@@ -42,11 +43,62 @@ interface ClockifyTimeEntryApiItem {
   };
 }
 
+interface ClockifyUserApiItem {
+  id: string;
+  defaultWorkspace?: string;
+  activeWorkspace?: string;
+}
+
+interface ClockifyIdentity {
+  workspaceId: string;
+  userId: string;
+}
+
 const clockifyHttp = createClockifyHttpClient(env.clockifyApiKey);
 
+let cachedIdentity: ClockifyIdentity | null = null;
+
+async function ensureClockifyIdentity(): Promise<ClockifyIdentity> {
+  if (cachedIdentity) {
+    return cachedIdentity;
+  }
+
+  const stored = getClockifyIdentity();
+  if (stored.workspaceId && stored.userId) {
+    cachedIdentity = {
+      workspaceId: stored.workspaceId,
+      userId: stored.userId,
+    };
+    return cachedIdentity;
+  }
+
+  const { data } = await clockifyHttp.get<ClockifyUserApiItem>("/user");
+
+  const userId = data.id?.trim();
+  const workspaceId = (data.defaultWorkspace ?? data.activeWorkspace)?.trim();
+
+  if (!userId) {
+    throw new Error(
+      "Nao foi possivel obter o ID do usuario Clockify a partir da API."
+    );
+  }
+
+  if (!workspaceId) {
+    throw new Error(
+      "Nao foi possivel obter o ID do workspace Clockify a partir da API."
+    );
+  }
+
+  setClockifyIdentity(workspaceId, userId);
+  cachedIdentity = { workspaceId, userId };
+  return cachedIdentity;
+}
+
 export async function listProjects(): Promise<ClockifyProject[]> {
+  const { workspaceId } = await ensureClockifyIdentity();
+
   const { data } = await clockifyHttp.get<ClockifyProjectApiItem[]>(
-    `/workspaces/${env.clockifyWorkspaceId}/projects`,
+    `/workspaces/${workspaceId}/projects`,
     {
       params: {
         "page-size": 100
@@ -62,11 +114,12 @@ export async function listProjects(): Promise<ClockifyProject[]> {
 }
 
 export async function getTimeEntries(date: string): Promise<ClockifyTimeEntry[]> {
+  const { workspaceId, userId } = await ensureClockifyIdentity();
   const start = `${date}T00:00:00Z`;
   const end = `${date}T23:59:59Z`;
 
   const { data } = await clockifyHttp.get<ClockifyTimeEntryApiItem[]>(
-    `/workspaces/${env.clockifyWorkspaceId}/user/${env.clockifyUserId}/time-entries`,
+    `/workspaces/${workspaceId}/user/${userId}/time-entries`,
     {
       params: {
         start,
@@ -87,8 +140,10 @@ export async function getTimeEntries(date: string): Promise<ClockifyTimeEntry[]>
 export async function createTimeEntry(
   input: ClockifyTimeEntryInput
 ): Promise<ClockifyTimeEntry> {
+  const { workspaceId } = await ensureClockifyIdentity();
+
   const { data } = await clockifyHttp.post<ClockifyTimeEntryApiItem>(
-    `/workspaces/${env.clockifyWorkspaceId}/time-entries`,
+    `/workspaces/${workspaceId}/time-entries`,
     {
       start: input.start,
       end: input.end,
@@ -106,7 +161,9 @@ export async function createTimeEntry(
 }
 
 export async function deleteTimeEntry(entryId: string): Promise<void> {
+  const { workspaceId } = await ensureClockifyIdentity();
+
   await clockifyHttp.delete(
-    `/workspaces/${env.clockifyWorkspaceId}/time-entries/${encodeURIComponent(entryId)}`
+    `/workspaces/${workspaceId}/time-entries/${encodeURIComponent(entryId)}`
   );
 }
