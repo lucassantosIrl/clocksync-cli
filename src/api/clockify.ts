@@ -58,7 +58,7 @@ const clockifyHttp = createClockifyHttpClient(env.clockifyApiKey);
 
 let cachedIdentity: ClockifyIdentity | null = null;
 
-async function ensureClockifyIdentity(): Promise<ClockifyIdentity> {
+export async function ensureClockifyIdentity(): Promise<ClockifyIdentity> {
   if (cachedIdentity) {
     return cachedIdentity;
   }
@@ -92,6 +92,10 @@ async function ensureClockifyIdentity(): Promise<ClockifyIdentity> {
   setClockifyIdentity(workspaceId, userId);
   cachedIdentity = { workspaceId, userId };
   return cachedIdentity;
+}
+
+export function clearClockifyIdentityCache(): void {
+  cachedIdentity = null;
 }
 
 export async function listProjects(): Promise<ClockifyProject[]> {

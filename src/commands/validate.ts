@@ -53,13 +53,13 @@ export async function runValidateCommand(
     process.exitCode = 1;
     console.log("\nEncontradas divergencias no periodo.");
     if (options.month) {
-      console.log(`Sugestao: clocksync sync --month=${options.month}`);
+      console.log(`Sugestao: ${CMD_ALIAS} sync --month=${options.month}`);
     } else if (options.currentWeek) {
-      console.log("Sugestao: clocksync sync --current-week");
+      console.log(`Sugestao: ${CMD_ALIAS} sync --current-week`);
     } else if (options.currentMonth) {
-      console.log("Sugestao: clocksync sync --current-month");
+      console.log(`Sugestao: ${CMD_ALIAS} sync --current-month`);
     } else {
-      console.log("Sugestao: clocksync sync");
+      console.log(`Sugestao: ${CMD_ALIAS} sync`);
     }
     return;
   }
@@ -70,6 +70,7 @@ export async function runValidateCommand(
 
 import { getTimeEntries, type ClockifyTimeEntry } from "../api/clockify";
 import { getIdleProject } from "../config";
+import { CMD_ALIAS } from "../constants";
 import { getWorklogs } from "../api/tempo";
 import { eachDay, resolvePeriod } from "../utils/date";
 import { formatDuration } from "../utils/format";

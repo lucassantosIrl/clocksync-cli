@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
 import { Command, CommanderError } from "commander";
+import { runConfigCommand } from "./commands/config";
 import { runProjectsCommand } from "./commands/projects";
 import { runSetCommand } from "./commands/set";
 import { runSyncCommand } from "./commands/sync";
 import { runValidateCommand } from "./commands/validate";
+import { CMD_ALIAS } from "./constants";
 
 const program = new Command();
 
 program
-  .name("clocksync")
+  .name(CMD_ALIAS)
   .description("CLI para sincronizar apontamentos Jira Tempo e Clockify")
   .version("0.1.0");
 
@@ -70,6 +72,13 @@ program
   .description("Lista projetos disponiveis no workspace Clockify configurado")
   .action(async () => {
     await runProjectsCommand();
+  });
+
+program
+  .command("config")
+  .description("Recria o arquivo ~/.clocksync.json com IDs obtidos pelas APIs")
+  .action(async () => {
+    await runConfigCommand();
   });
 
 async function main(): Promise<void> {

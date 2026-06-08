@@ -1,5 +1,6 @@
 import { listProjects } from "../api/clockify";
 import { setDefaultProject, setIdleProject } from "../config";
+import { CMD_ALIAS } from "../constants";
 
 export interface SetCommandOptions {
   projectId?: string;
@@ -45,7 +46,7 @@ export async function runSetCommand(options: SetCommandOptions): Promise<void> {
       const project = projectsById.get(projectId);
       if (!project) {
         throw new Error(
-          `Projeto inexistente para --projectId: "${projectId}". Execute "clocksync projects" para listar IDs validos.`
+          `Projeto inexistente para --projectId: "${projectId}". Execute "${CMD_ALIAS} projects" para listar IDs validos.`
         );
       }
 
@@ -57,7 +58,7 @@ export async function runSetCommand(options: SetCommandOptions): Promise<void> {
       const idleProject = projectsById.get(idleProjectId);
       if (!idleProject) {
         throw new Error(
-          `Projeto inexistente para --idleProjectId: "${idleProjectId}". Execute "clocksync projects" para listar IDs validos.`
+          `Projeto inexistente para --idleProjectId: "${idleProjectId}". Execute "${CMD_ALIAS} projects" para listar IDs validos.`
         );
       }
 

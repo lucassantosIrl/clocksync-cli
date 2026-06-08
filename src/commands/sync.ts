@@ -8,6 +8,7 @@ import { getTimeEntries, createTimeEntry, deleteTimeEntry, type ClockifyTimeEntr
 import { getIssue } from "../api/jira";
 import { getWorklogs } from "../api/tempo";
 import { getConfigPath, getDefaultProject, getIdleProject } from "../config";
+import { CMD_ALIAS } from "../constants";
 import { resolvePeriod } from "../utils/date";
 import { formatDuration } from "../utils/format";
 import { delayBetweenCalls } from "../utils/http";
@@ -18,8 +19,8 @@ function ensureDefaultProjectConfigured(): string {
     throw new Error(
       [
         "Projeto padrao do Clockify nao configurado.",
-        "Use: clocksync set --projectId=<id>",
-        "Para descobrir o id: clocksync projects",
+        `Use: ${CMD_ALIAS} set --projectId=<id>`,
+        `Para descobrir o id: ${CMD_ALIAS} projects`,
         `Arquivo de configuracao: ${getConfigPath()}`
       ].join("\n")
     );

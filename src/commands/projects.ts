@@ -1,4 +1,5 @@
 import { listProjects } from "../api/clockify";
+import { CMD_ALIAS } from "../constants";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim() !== "") {
@@ -14,7 +15,7 @@ export async function runProjectsCommand(): Promise<void> {
 
     if (projects.length === 0) {
       console.log("Nenhum projeto encontrado no workspace configurado do Clockify.");
-      console.log('Use "clocksync set --projectId=<id>" apos criar um projeto no Clockify.');
+      console.log(`Use "${CMD_ALIAS} set --projectId=<id>" apos criar um projeto no Clockify.`);
       return;
     }
 
@@ -25,9 +26,9 @@ export async function runProjectsCommand(): Promise<void> {
 
     console.log("");
     console.log("Para configurar o projeto padrao:");
-    console.log("  clocksync set --projectId=<id>");
+    console.log(`  ${CMD_ALIAS} set --projectId=<id>`);
     console.log("Para configurar o projeto de ociosidade:");
-    console.log("  clocksync set --idleProjectId=<id>");
+    console.log(`  ${CMD_ALIAS} set --idleProjectId=<id>`);
   } catch (error) {
     throw new Error(`Falha ao listar projetos do Clockify: ${getErrorMessage(error)}`);
   }

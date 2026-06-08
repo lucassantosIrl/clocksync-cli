@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "CLI para sincronizar apontamentos entre Jira Tempo e Clockify.",
   "bin": {
-    "clocksync": "dist/index.js"
+    "clocki": "dist/index.js"
   },
   "main": "dist/index.js",
   "files": [
