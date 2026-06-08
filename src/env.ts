@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 
 export interface EnvConfig {
   tempoApiToken: string;
-  tempoAccountId: string;
   jiraDomain: string;
   jiraEmail: string;
   jiraApiToken: string;
@@ -11,7 +10,6 @@ export interface EnvConfig {
 
 const REQUIRED_ENV_VARS = [
   "TEMPO_API_TOKEN",
-  "TEMPO_ACCOUNT_ID",
   "JIRA_DOMAIN",
   "JIRA_EMAIL",
   "JIRA_API_TOKEN",
@@ -47,7 +45,6 @@ export function loadEnvConfig(): EnvConfig {
 
   return {
     tempoApiToken: readRequiredVar("TEMPO_API_TOKEN"),
-    tempoAccountId: readRequiredVar("TEMPO_ACCOUNT_ID"),
     jiraDomain: readRequiredVar("JIRA_DOMAIN"),
     jiraEmail: readRequiredVar("JIRA_EMAIL"),
     jiraApiToken: readRequiredVar("JIRA_API_TOKEN"),

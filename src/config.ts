@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -11,8 +11,13 @@ export interface ClockifyProjectConfig {
   idleProjectName?: string;
 }
 
+export interface JiraConfig {
+  accountId?: string;
+}
+
 export interface AppConfig {
   clockify: ClockifyProjectConfig;
+  jira: JiraConfig;
 }
 
 export interface ProjectSelection {
@@ -25,7 +30,44 @@ const CONFIG_PATH = path.join(homedir(), ".clocksync.json");
 function getEmptyConfig(): AppConfig {
   return {
     clockify: {},
+    jira: {},
   };
+}
+
+function parseOptionalStringSection(
+  section: unknown,
+  sectionName: string,
+  fields: readonly string[]
+): Record<string, string> {
+  if (section === undefined) {
+    return {};
+  }
+
+  if (!section || typeof section !== "object") {
+    throw new Error(
+      `Nao foi possivel ler ${CONFIG_PATH}: campo "${sectionName}" invalido.`
+    );
+  }
+
+  const normalized = section as Record<string, unknown>;
+  const result: Record<string, string> = {};
+
+  for (const field of fields) {
+    const value = normalized[field];
+    if (value === undefined) {
+      continue;
+    }
+
+    if (typeof value !== "string") {
+      throw new Error(
+        `Nao foi possivel ler ${CONFIG_PATH}: campo "${sectionName}.${field}" deve ser string.`
+      );
+    }
+
+    result[field] = value;
+  }
+
+  return result;
 }
 
 function parseConfig(rawValue: string): AppConfig {
@@ -44,45 +86,25 @@ function parseConfig(rawValue: string): AppConfig {
     throw new Error(`Nao foi possivel ler ${CONFIG_PATH}: formato de config invalido.`);
   }
 
-  const parsedConfig = parsed as { clockify?: unknown };
-  const clockify = parsedConfig.clockify;
+  const parsedConfig = parsed as { clockify?: unknown; jira?: unknown };
+  const clockifyFields = parseOptionalStringSection(
+    parsedConfig.clockify,
+    "clockify",
+    [
+      "workspaceId",
+      "userId",
+      "defaultProjectId",
+      "defaultProjectName",
+      "idleProjectId",
+      "idleProjectName",
+    ]
+  );
+  const jiraFields = parseOptionalStringSection(parsedConfig.jira, "jira", ["accountId"]);
 
-  if (clockify === undefined) {
-    return { clockify: {} };
-  }
-
-  if (!clockify || typeof clockify !== "object") {
-    throw new Error(`Nao foi possivel ler ${CONFIG_PATH}: campo "clockify" invalido.`);
-  }
-
-  const normalized = clockify as Record<string, unknown>;
-
-  const result: ClockifyProjectConfig = {};
-  const optionalFields: Array<keyof ClockifyProjectConfig> = [
-    "workspaceId",
-    "userId",
-    "defaultProjectId",
-    "defaultProjectName",
-    "idleProjectId",
-    "idleProjectName",
-  ];
-
-  for (const field of optionalFields) {
-    const value = normalized[field];
-    if (value === undefined) {
-      continue;
-    }
-
-    if (typeof value !== "string") {
-      throw new Error(
-        `Nao foi possivel ler ${CONFIG_PATH}: campo "${field}" deve ser string.`
-      );
-    }
-
-    result[field] = value;
-  }
-
-  return { clockify: result };
+  return {
+    clockify: clockifyFields as ClockifyProjectConfig,
+    jira: jiraFields as JiraConfig,
+  };
 }
 
 function saveConfig(config: AppConfig): void {
@@ -174,4 +196,26 @@ export function setClockifyIdentity(workspaceId: string, userId: string): void {
   config.clockify.workspaceId = workspaceId.trim();
   config.clockify.userId = userId.trim();
   saveConfig(config);
+}
+
+export function getJiraAccountId(): { accountId?: string } {
+  const config = getConfig();
+  return {
+    accountId: config.jira.accountId,
+  };
+}
+
+export function setJiraAccountId(accountId: string): void {
+  const config = getConfig();
+
+  if (!accountId.trim()) {
+    throw new Error("Account ID do Jira nao pode ser vazio.");
+  }
+
+  config.jira.accountId = accountId.trim();
+  saveConfig(config);
+}
+
+export function resetConfig(): void {
+  rmSync(CONFIG_PATH, { force: true });
 }

@@ -1,3 +1,4 @@
+import { ensureJiraAccountId } from "./jira";
 import { env } from "../env";
 import { createTempoHttpClient, delayBetweenCalls } from "../utils/http";
 
@@ -33,12 +34,13 @@ export async function getWorklogs(
   from: string,
   to: string
 ): Promise<TempoWorklog[]> {
+  const accountId = await ensureJiraAccountId();
   const allWorklogs: TempoWorklog[] = [];
   let offset = 0;
 
   while (true) {
     const { data } = await tempoHttp.get<TempoWorklogResponse>(
-      `/worklogs/user/${env.tempoAccountId}`,
+      `/worklogs/user/${accountId}`,
       {
         params: {
           from,
