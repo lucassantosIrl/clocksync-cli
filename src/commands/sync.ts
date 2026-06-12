@@ -82,9 +82,10 @@ export async function runSyncCommand(options: SyncCommandOptions): Promise<void>
     try {
       await delayBetweenCalls();
       dayEntries = await getTimeEntries(date);
-      if (dayEntries.length > 0) {
+      const entriesToDelete = dayEntries.filter((entry) => entry.projectId === projectId || entry.projectId === idleProjectId);
+      if (entriesToDelete.length > 0) {
         console.log(`♻️ Limpando ${dayEntries.length} apontamento(s) existente(s) em ${date}`);
-        for (const entry of dayEntries) {
+        for (const entry of entriesToDelete) {
           await delayBetweenCalls();
           await deleteTimeEntry(entry.id);
           deletedCount += 1;
