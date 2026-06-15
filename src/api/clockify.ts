@@ -35,6 +35,7 @@ interface ClockifyProjectApiItem {
 interface ClockifyTimeEntryApiItem {
   id: string;
   projectId?: string;
+  billable?: boolean;
   description?: string;
   timeInterval?: {
     start?: string;
@@ -152,7 +153,8 @@ export async function createTimeEntry(
       start: input.start,
       end: input.end,
       description: input.description,
-      projectId: input.projectId
+      projectId: input.projectId,
+      billable: true
     }
   );
 

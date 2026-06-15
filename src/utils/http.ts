@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 
-export const RATE_LIMIT_DELAY_MS = 200;
+export const RATE_LIMIT_DELAY_MS = 0;
 
 export function delay(ms: number): Promise<void> {
   if (!Number.isFinite(ms) || ms < 0) {

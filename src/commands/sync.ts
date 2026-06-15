@@ -57,6 +57,42 @@ function getLatestIsoDateTime(a: string | undefined, b: string): string {
   return new Date(b).getTime() > new Date(a).getTime() ? b : a;
 }
 
+function getEntryDurationSeconds(entry: ClockifyTimeEntry): number {
+  const duration = entry.timeInterval?.duration;
+  if (duration && duration.startsWith("P")) {
+    const parsedDuration = parseIso8601DurationToSeconds(duration);
+    if (parsedDuration > 0) {
+      return parsedDuration;
+    }
+  }
+
+  const start = entry.timeInterval?.start;
+  const end = entry.timeInterval?.end;
+  if (!start || !end) {
+    return 0;
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 1000));
+}
+
+function parseIso8601DurationToSeconds(value: string): number {
+  const match = /^P(?:\d+D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(value);
+  if (!match) {
+    return 0;
+  }
+
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  const seconds = Number(match[3] ?? 0);
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
 export async function runSyncCommand(options: SyncCommandOptions): Promise<void> {
   const projectId = ensureDefaultProjectConfigured();
   const idleProjectId = getIdleProject().id;
@@ -70,15 +106,17 @@ export async function runSyncCommand(options: SyncCommandOptions): Promise<void>
   let deletedCount = 0;
   let idleCreatedCount = 0;
   let errorCount = 0;
-
+  
   const dates = groupWorklogsByDate(worklogs);
-
+  
   for (const date of dates) {
+    
     const dayWorklogs = worklogs
-      .filter((worklog) => worklog.startDate === date)
-      .sort((a, b) => a.startDateTimeUtc.localeCompare(b.startDateTimeUtc));
-
+    .filter((worklog) => worklog.startDate === date)
+    .sort((a, b) => a.startDateTimeUtc.localeCompare(b.startDateTimeUtc));
+    
     let dayEntries: ClockifyTimeEntry[] = [];
+    let daySyncedSeconds = 0;
     try {
       await delayBetweenCalls();
       dayEntries = await getTimeEntries(date);
@@ -90,6 +128,8 @@ export async function runSyncCommand(options: SyncCommandOptions): Promise<void>
           await deleteTimeEntry(entry.id);
           deletedCount += 1;
         }
+        dayEntries = dayEntries.filter((entry) => !entriesToDelete.includes(entry));
+        daySyncedSeconds += dayEntries.reduce((acc, entry) => acc + getEntryDurationSeconds(entry), 0);
         dayEntries = [];
       }
     } catch (error) {
@@ -99,7 +139,6 @@ export async function runSyncCommand(options: SyncCommandOptions): Promise<void>
       continue;
     }
 
-    let daySyncedSeconds = 0;
     let lastEndDateTimeUtc: string | undefined;
 
     for (const worklog of dayWorklogs) {
