@@ -1,4 +1,4 @@
-import { getClockifyIdentity, setClockifyIdentity } from "../config";
+import { getClockifyIdentity, setClockifyIdentity, getDefaultProject, getIdleProject } from "../config";
 import { env } from "../env";
 import { createClockifyHttpClient } from "../utils/http";
 
@@ -146,6 +146,8 @@ export async function createTimeEntry(
   input: ClockifyTimeEntryInput
 ): Promise<ClockifyTimeEntry> {
   const { workspaceId } = await ensureClockifyIdentity();
+  const defaultProject = getDefaultProject();
+  const idleProject = getIdleProject();
 
   const { data } = await clockifyHttp.post<ClockifyTimeEntryApiItem>(
     `/workspaces/${workspaceId}/time-entries`,
@@ -154,7 +156,7 @@ export async function createTimeEntry(
       end: input.end,
       description: input.description,
       projectId: input.projectId,
-      billable: true
+      billable: input.projectId === defaultProject.id
     }
   );
 
