@@ -28,7 +28,7 @@ function readRequiredVar(name: RequiredEnvVar): string {
 }
 
 export function loadEnvConfig(): EnvConfig {
-  dotenv.config();
+  dotenv.config({ override: true });
 
   const missingVars = REQUIRED_ENV_VARS.filter((name) => {
     const value = process.env[name];

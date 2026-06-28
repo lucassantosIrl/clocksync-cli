@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance } from "axios";
+import axios, { type AxiosError, type AxiosInstance } from "axios";
 
 export const RATE_LIMIT_DELAY_MS = 0;
 
@@ -33,7 +33,7 @@ export function createJiraHttpClient(options: {
 }): AxiosInstance {
   const credentials = Buffer.from(`${options.jiraEmail}:${options.jiraApiToken}`).toString("base64");
 
-  return axios.create({
+  const client = axios.create({
     baseURL: `https://${options.jiraDomain}.atlassian.net/rest/api/2`,
     headers: {
       Authorization: `Basic ${credentials}`,
@@ -41,6 +41,38 @@ export function createJiraHttpClient(options: {
       "Content-Type": "application/json"
     }
   });
+
+  client.interceptors.response.use(
+    (response) => response,
+    (error: unknown) => {
+      if (isJiraAuthenticationFailure(error)) {
+        return Promise.reject(
+          new Error(
+            [
+              "Autenticacao no Jira falhou: o Jira retornou AUTHENTICATED_FAILED.",
+              "Verifique JIRA_EMAIL e JIRA_API_TOKEN no .env.",
+              "Use um API token da Atlassian Account para Basic Auth; cookie de sessao do Postman nao autentica o CLI."
+            ].join("\n")
+          )
+        );
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+}
+
+function isJiraAuthenticationFailure(error: unknown): error is AxiosError {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status;
+  const loginReason = error.response?.headers?.["x-seraph-loginreason"];
+
+  return status === 401 || loginReason === "AUTHENTICATED_FAILED";
 }
 
 export function createClockifyHttpClient(clockifyApiKey: string): AxiosInstance {
